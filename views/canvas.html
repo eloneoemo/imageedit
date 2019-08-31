@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <title>ImageEdit</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/inicio"><img src="/assets/img/logo.png" width="80"></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+        <li class="nav-item active">
+            <a class="nav-link" href="/inicio">Galería</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/subir-imagen">Subir Imagen</a>
+        </li>
+        </ul>
+    </div>
+    </nav>  
+    <hr>
+    <div class="row">
+        <div class="col-12">
+            <h1 class="gallery-title">Editar Imagen</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <canvas id="canvas" width="700" style="border:1px solid #000000;" height="500px">
+            </canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            Color : <select id="selColor">
+            <option value="black">Negro</option>
+            <option value="blue" selected="selected">Azul</option>
+            <option value="red">Rojo</option>
+            <option value="green">Verde</option>
+            <option value="yellow">Amarillo</option>
+            <option value="gray">Gris</option>
+        </select>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var mousePressed = false;
+    var lastX, lastY;
+    var ctx;
+    var socket = io();
+    var colorActual = $('#selColor').val();
+    $(document).ready(function () {
+        var usuario = {{usuario | json_encode | safe}};
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        var imagen = hashes[0].split('=')[1];
+        var canvas = document.getElementById("canvas");
+        ctx = canvas.getContext("2d");
+        var image = new Image();
+        image.src = "images/" + imagen;
+        image.onload = function() {
+            ctx.drawImage(image, 0, 0);
+        };
+        $('#selColor').on('change', function () {
+            colorActual = this.value;
+        });
+        $('#canvas').mousedown(function (e) {
+            mousePressed = true;
+            Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, false);
+            socket.emit('mousedown', {usuario: usuario, x: e.pageX - $(this).offset().left, y: e.pageY - $(this).offset().top, estado: false, mousePressed: mousePressed, colorActual: colorActual});
+        });
+        $('#canvas').mousemove(function (e) {
+            if (mousePressed) {
+                Draw(e.pageX - $(this).offset().left, e.pageY - $(this).offset().top, true);
+                socket.emit('mousemove', {usuario: usuario, x: e.pageX - $(this).offset().left, y: e.pageY - $(this).offset().top, estado: true, mousePressed: mousePressed, colorActual: colorActual});
+            }
+        });
+        $('#canvas').mouseup(function (e) {
+            mousePressed = false;
+            socket.emit('mouseup', {mousePressed: mousePressed});
+        });
+        $('#canvas').mouseleave(function (e) {
+            mousePressed = false;
+            socket.emit('mouseleave', {mousePressed: mousePressed});
+        });
+        socket.on('mousedown', function (datos) {
+            mousePressed = datos.mousePressed;
+            colorActual = datos.colorActual;
+            $('#selColor').val(colorActual);
+            Draw(datos.x, datos.y, datos.estado);
+        });
+        socket.on('mousemove', function (datos) {
+            mousePressed = datos.mousePressed;
+            colorActual = datos.colorActual;
+            $('#selColor').val(colorActual);
+            Draw(datos.x, datos.y, datos.estado);
+        });
+        socket.on('mouseup', function (datos) {
+            mousePressed = datos.mousePressed;
+        });
+        socket.on('mouseleave', function (datos) {
+            mousePressed = datos.mousePressed;
+        });
+    });
+    function Draw(x, y, isDown) {
+        if (isDown) {
+            ctx.beginPath();
+            ctx.strokeStyle = colorActual;
+            ctx.lineWidth = 3;
+            ctx.lineJoin = "round";
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        lastX = x; lastY = y;
+    }
+    function clearArea() {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+</script>
+</body>
+</html>

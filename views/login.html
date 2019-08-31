@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+
+{% block form %}
+<div class="row justify-content-md-center mt-3">
+	<div class="col-4">
+		<img src="assets/img/logo.png" alt="" class="img-fluid">
+	</div>
+</div>
+<hr>
+<div class="row justify-content-md-center">
+<div class="col-md-4">
+	<form role="form" class="col-12" action="/login" method="POST">
+		<div class="form-group">
+			<label for="exampleInputEmail1">Nombre de usuario</label>
+			<input type="text" name="usuario" class="form-control" id="exampleInputEmail1">
+		</div>
+		<div class="form-group">
+			<label for="exampleInputPassword1">Contraseña</label>
+			<input type="password" name="password" class="form-control" id="exampleInputPassword1">
+		</div>
+		<button type="submit" class="btn btn-primary">Enviar</button>
+		<div class="form-group">
+			<p>Si no tienes una cuenta aún, porfavor <a href="/registro">regístrate</a></p>
+		</div>
+		<div class="form-group">
+			<p>Entrar con <a href="/auth/twitter">twitter</a></p>
+		</div>
+	</form>
+</div>
+</div>
+{% endblock %}
