@@ -9,7 +9,7 @@
   "author": "Josue Cespedes",
   "license": "ISC",
   "dependencies": {
-    "mongoose": "3.8.21",
+    "mongoose": "5.7.8",
     "mongoose-redis-cache": "0.0.3",
     "morgan": "1.5.1",
     "passport": "0.2.1",
